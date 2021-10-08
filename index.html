@@ -16,37 +16,46 @@
   </style>
 </head>
 
-<body>
+<body style="font-family: Gill Sans,sans-serif">
+  <h4 style="margin-top: 40px;">INFO 3300 Project 1</h4>
+  <h1 style="margin-top: 100px; text-align:center;">IT Industry Salaries in EU (2018)</h1>
+  <p style="margin-left: 20%;"> This project explores the salaries of IT workers accross industries. 
+    This data visualization demonstrates the distribution <br/> of salary for IT workers in the EU.
+    The first visualization demonstrates the change in salary for workers in different industries <br/> based on their years of experience. 
+    The second visualization demonstrates the change in salary for workers across the years based on  <br/>the industry they are working in.</p>
 
-  <h4 style="font-family: Gill Sans Extrabold, sans-serif; font-weight:300; margin-top:20px;  margin-left:20px;">
+  <h4 style=" font-weight:300; margin-top:100px;  margin-left:20px;">
     Visualization 1</h4>
-
-  <h3 style="font-size: 20pt; font-family: Gill Sans Extrabold, sans-serif; font-weight: bold;  margin-left: 5%;">
-    Median Salary based on IT Industries by
-    Years of Experience </h3>
-  <div id="container" style="display: flex; margin-top:30px; margin-left: 100px">
-    <text id="yaxis" style="display: inline-block;"></text>
-    <svg id="p1" height="500" width="800"></svg>
+  
+  <div style="margin-left: 20%;">
+    <h3 style="font-size: 17pt; font-weight: 600; margin-left: 13%;">
+      Median Salary based on IT Industries by
+      Years of Experience </h3>
+    <div id="container" style="display: flex; margin-top:30px;">
+      <text id="yaxis" style="display: inline-block;"></text>
+      <svg id="p1" height="500" width="800"></svg>
+    </div>
+    <p style="margin-top: 30px; margin-left: 40px; ">*** Categories with no
+      data points were
+      represented as bars with
+      "zero height" ***</p>
+    <div class="legend"
+      style="margin-left: 40px; height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
+    </div>
   </div>
-  <p style="font-family: Gill Sans Extrabold, sans-serif; margin-left: 100px; margin-top: 30px;">*Categories with no
-    data points were
-    represented as bars with
-    "zero height"</p>
-  <div class="legend"
-    style="margin-left: 100px; height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
-  </div>
 
-  <h4 style="font-family: Gill Sans Extrabold, sans-serif; font-weight:300; margin-top:100px;  margin-left:20px;">
+  <h4 style="font-weight:300; margin-top:100px;  margin-left:20px;">
     Visualization 2</h4>
 
-  <h3 style="font-size: 20pt; font-family: Gill Sans Extrabold, sans-serif; font-weight: bold;  margin-left: 5%;">
+  <h3 style="font-size: 18pt; font-weight: 600;  margin-left: 28%; margin-bottom: 0;">
     Change in Average Salary from 2016-2018 based on IT Industries</h3>
 
-
-  <svg id="male" height="700" width="700" style="margin-left: 100px"></svg>
-  <svg id="female" height="700" width="700"></svg>
-  <div class="legend" id="viz2"
-    style="margin-left: 100px; height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
+  <div >
+    <svg id="male" height="700" width="700" style="margin-left: 15px;"></svg>
+    <svg id="female" height="700" width="700"></svg>
+    <div class="legend" id="viz2"
+      style=" height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
+    </div>
   </div>
   <script>
     let container = d3.select("text#yaxis");
@@ -56,12 +65,13 @@
       .attr("x", 0)
       .attr("y", 250)
       .style("text-anchor", "middle")
-      .style('font-family', 'Gill Sans Extrabold,sans-serif')
       .style('height', 'fit-content')
       .style("transform", "rotate(270deg)")
       .style("margin-top", 220)
       .style("margin-right", 2)
-      .style('font-size', '13px')
+      .style('font-size', '15px')
+      .style('font-weight',600)
+
       .text("Salary");
 
     const svg = d3.select("svg#p1");
@@ -191,7 +201,6 @@
 
       let legend = d3.selectAll("div.legend");
       let s = legend.append("p")
-        .style('font-family', 'Gill Sans Extrabold, sans-serif')
         .style('font-style', 'oblique')
         .style('font-size', '15pt')
         .style('margin-top', 0)
@@ -218,8 +227,7 @@
           .style('margin-right', 20)
           .style('position', 'relative')
           .style('display', 'flex')
-          .style('flex-direction', 'row')
-          .style('font-family', 'Gill Sans Extrabold, sans-serif');
+          .style('flex-direction', 'row');
 
         s.append('span')
           .style('display', 'inline-block')
@@ -234,7 +242,7 @@
       });
 
       let viz2Legend = d3.select("div#viz2.legend")
-        .style('margin-left', 450)
+        .style('margin-left', '20%')
         .style('transform', `translate(${0}, ${- 35}px)`);
 
       let viz2LegendUX = d3.select("div#viz2.legend p#UX_Designer").style('display', 'none');
@@ -278,8 +286,8 @@
         .attr("y", height - 8)
         .style("text-anchor", "middle")
         .style("margin-top", 20)
-        .style('font-family', 'Gill Sans Extrabold,sans-serif')
-        .style('font-size', '13px')
+        .style('font-size', '15px')
+        .style('font-weight',600)
         .text("Years of Experience");
 
 
@@ -1079,7 +1087,7 @@
       });
 
   </script>
-
+<p style="margin-top: 100px;"> &#169; Christy Song(cs966) Lang Lei(ll674) Kexin Li(kl648) Seonghee Lee (sl994) </p>
 
 </body>
 

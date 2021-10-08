@@ -13,6 +13,10 @@
     .gridlines .domain {
       stroke: none;
     }
+
+    .tick {
+      font-size: 6.5pt;
+    }
   </style>
 </head>
 
@@ -45,6 +49,10 @@
 
   <svg id="male" height="700" width="700" style="margin-left: 100px"></svg>
   <svg id="female" height="700" width="700"></svg>
+  <p id="viz2-l" style="font-family: Gill Sans Extrabold, sans-serif; margin-left: 100px; margin-top: 30px;">*The lines
+    show an
+    average change in salary over the years 2016 to 2018 by each industry</p>
+
   <div class="legend" id="viz2"
     style="margin-left: 100px; height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
   </div>
@@ -237,10 +245,14 @@
         .style('margin-left', 450)
         .style('transform', `translate(${0}, ${- 35}px)`);
 
+      let viz2comment = d3.select("p#viz2-l")
+        .style('margin-left', 450)
+        .style('transform', `translate(${0}, ${- 35}px)`);
+
       let viz2LegendUX = d3.select("div#viz2.legend p#UX_Designer").style('display', 'none');
 
 
-      let leftAxis = d3.axisLeft(salaryMedianScale).tickFormat(d3.format("$~s"));
+      let leftAxis = d3.axisLeft(salaryMedianScale).tickFormat(function (d) { return d3.format("$~s")(d).slice(1) + "€" });
 
       let leftGridlines = d3.axisLeft(salaryMedianScale)
         .tickSize(-width)
@@ -349,7 +361,7 @@
 
         //y axis & lable
         let leftAxis = d3.axisLeft(yScale)
-          .tickFormat(d3.format("$~s"));
+          .tickFormat(function (d) { return d3.format("$~s")(d).slice(1) + "€" });
         //.tickFormat(d3.format("$.0f"));
         //"$.0s"
 
@@ -743,7 +755,7 @@
 
 
         let leftAxis2 = d3.axisLeft(yScale2)
-          .tickFormat(d3.format("$~s"));
+          .tickFormat(function (d) { return d3.format("$~s")(d).slice(1) + "€" });
         //.tickFormat(d3.format("$.0f"));
         //"$.0s"
 

@@ -28,6 +28,10 @@
     <text id="yaxis" style="display: inline-block;"></text>
     <svg id="p1" height="500" width="800"></svg>
   </div>
+  <p style="font-family: Gill Sans Extrabold, sans-serif; margin-left: 100px; margin-top: 30px;">*Categories with no
+    data points were
+    represented as bars with
+    "zero height"</p>
   <div class="legend"
     style="margin-left: 100px; height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
   </div>
@@ -36,7 +40,7 @@
     Visualization 2</h4>
 
   <h3 style="font-size: 20pt; font-family: Gill Sans Extrabold, sans-serif; font-weight: bold;  margin-left: 5%;">
-    Change in Average Salary from 2018-2020 based on IT Industries</h3>
+    Change in Average Salary from 2016-2018 based on IT Industries</h3>
 
 
   <svg id="male" height="700" width="700" style="margin-left: 100px"></svg>
@@ -199,6 +203,7 @@
 
       industryScale.domain().forEach((ind, i) => {
         let s = legend.append("p")
+          .attr('id', ind)
           .style('vertical-align', 'bottom')
           .attr('class', 'industry')
           .style('margin-bottom', 5);
@@ -229,8 +234,10 @@
       });
 
       let viz2Legend = d3.select("div#viz2.legend")
-        .style('margin-left', 350)
+        .style('margin-left', 450)
         .style('transform', `translate(${0}, ${- 35}px)`);
+
+      let viz2LegendUX = d3.select("div#viz2.legend p#UX_Designer").style('display', 'none');
 
 
       let leftAxis = d3.axisLeft(salaryMedianScale).tickFormat(d3.format("$~s"));
@@ -284,18 +291,18 @@
   </script>
 
   <script>
-    maleaverage = [{ "Position": 'FullStack_Developer', "year": 2020, "salary": 70143 },
-    { "Position": 'FullStack_Developer', "year": 2019, "salary": 61857 },
-    { "Position": 'FullStack_Developer', "year": 2018, "salary": 54357 },
-    { "Position": 'FrontEnd_Developer', "year": 2020, "salary": 65933 },
-    { "Position": 'FrontEnd_Developer', "year": 2019, "salary": 56438 },
-    { "Position": 'FrontEnd_Developer', "year": 2018, "salary": 50792 },
-    { "Position": 'Data Scientist', "year": 2020, "salary": 84310 },
-    { "Position": 'Data Scientist', "year": 2019, "salary": 74600 },
-    { "Position": 'Data Scientist', "year": 2018, "salary": 67290 },
-    { "Position": 'BackEnd_Developer', "year": 2020, "salary": 70319 },
-    { "Position": 'BackEnd_Developer', "year": 2019, "salary": 61526 },
-    { "Position": 'BackEnd_Developer', "year": 2018, "salary": 55971 }];
+    maleaverage = [{ "Position": 'FullStack_Developer', "year": 2018, "salary": 70143 },
+    { "Position": 'FullStack_Developer', "year": 2017, "salary": 61857 },
+    { "Position": 'FullStack_Developer', "year": 2016, "salary": 54357 },
+    { "Position": 'FrontEnd_Developer', "year": 2018, "salary": 65933 },
+    { "Position": 'FrontEnd_Developer', "year": 2017, "salary": 56438 },
+    { "Position": 'FrontEnd_Developer', "year": 2016, "salary": 50792 },
+    { "Position": 'Data Scientist', "year": 2018, "salary": 84310 },
+    { "Position": 'Data Scientist', "year": 2017, "salary": 74600 },
+    { "Position": 'Data Scientist', "year": 2016, "salary": 67290 },
+    { "Position": 'BackEnd_Developer', "year": 2018, "salary": 70319 },
+    { "Position": 'BackEnd_Developer', "year": 2017, "salary": 61526 },
+    { "Position": 'BackEnd_Developer', "year": 2016, "salary": 55971 }];
 
 
 
@@ -363,7 +370,7 @@
         //x axis and label
         let x_axis = d3.axisBottom().scale(xScale)
           .tickValues([0, 1, 2, 3, 0])
-          .tickFormat((d, i) => ['0', '2018', '2019', '2020', '0'][i]);
+          .tickFormat((d, i) => ['0', '2016', '2017', '2018', '0'][i]);
 
 
         annotations.append("g")
@@ -691,18 +698,18 @@
 
 
 
-        femaleaverage = [{ "Position": 'FullStack_Developer', "year": 2020, "salary": 51000 },
-        { "Position": 'FullStack_Developer', "year": 2019, "salary": 43500 },
-        { "Position": 'FullStack_Developer', "year": 2018, "salary": 40000 },
-        { "Position": 'FrontEnd_Developer', "year": 2020, "salary": 56000 },
-        { "Position": 'FrontEnd_Developer', "year": 2019, "salary": 51000 },
-        { "Position": 'FrontEnd_Developer', "year": 2018, "salary": 45000 },
-        { "Position": 'Data Scientist', "year": 2020, "salary": 109000 },
-        { "Position": 'Data Scientist', "year": 2019, "salary": 105000 },
-        { "Position": 'Data Scientist', "year": 2018, "salary": 97000 },
-        { "Position": 'BackEnd_Developer', "year": 2020, "salary": 58227 },
-        { "Position": 'BackEnd_Developer', "year": 2019, "salary": 53493 },
-        { "Position": 'BackEnd_Developer', "year": 2018, "salary": 49250 }];
+        femaleaverage = [{ "Position": 'FullStack_Developer', "year": 2018, "salary": 51000 },
+        { "Position": 'FullStack_Developer', "year": 2017, "salary": 43500 },
+        { "Position": 'FullStack_Developer', "year": 2016, "salary": 40000 },
+        { "Position": 'FrontEnd_Developer', "year": 2018, "salary": 56000 },
+        { "Position": 'FrontEnd_Developer', "year": 2017, "salary": 51000 },
+        { "Position": 'FrontEnd_Developer', "year": 2016, "salary": 45000 },
+        { "Position": 'Data Scientist', "year": 2018, "salary": 109000 },
+        { "Position": 'Data Scientist', "year": 2017, "salary": 105000 },
+        { "Position": 'Data Scientist', "year": 2016, "salary": 97000 },
+        { "Position": 'BackEnd_Developer', "year": 2018, "salary": 58227 },
+        { "Position": 'BackEnd_Developer', "year": 2017, "salary": 53493 },
+        { "Position": 'BackEnd_Developer', "year": 2016, "salary": 49250 }];
 
 
 
@@ -747,7 +754,7 @@
 
         let x_axis2 = d3.axisBottom().scale(xScale2)
           .tickValues([0, 1, 2, 3, 0])
-          .tickFormat((d, i) => ['', '2018', '2019', '2020', '0'][i]);
+          .tickFormat((d, i) => ['', '2016', '2017', '2018', '0'][i]);
 
 
         annotations2.append("g")

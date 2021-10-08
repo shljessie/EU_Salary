@@ -1,0 +1,1079 @@
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <title>INFO 3300 - P1</title>
+  <style>
+    .gridlines line {
+      stroke: #949292;
+      stroke-width: 0.5px;
+    }
+
+    .gridlines .domain {
+      stroke: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h4 style="font-family: Gill Sans Extrabold, sans-serif; font-weight:300; margin-top:20px;  margin-left:20px;">
+    Visualization 1</h4>
+
+  <h3 style="font-size: 20pt; font-family: Gill Sans Extrabold, sans-serif; font-weight: bold;  margin-left: 5%;">
+    Median Salary based on IT Industries by
+    Years of Experience </h3>
+  <div id="container" style="display: flex; margin-top:30px; margin-left: 100px">
+    <text id="yaxis" style="display: inline-block;"></text>
+    <svg id="p1" height="500" width="800"></svg>
+  </div>
+  <div class="legend"
+    style="margin-left: 100px; height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
+  </div>
+
+  <h4 style="font-family: Gill Sans Extrabold, sans-serif; font-weight:300; margin-top:100px;  margin-left:20px;">
+    Visualization 2</h4>
+
+  <h3 style="font-size: 20pt; font-family: Gill Sans Extrabold, sans-serif; font-weight: bold;  margin-left: 5%;">
+    Change in Average Salary from 2018-2020 based on IT Industries</h3>
+
+
+  <svg id="male" height="700" width="700" style="margin-left: 100px"></svg>
+  <svg id="female" height="700" width="700"></svg>
+  <div class="legend" id="viz2"
+    style="margin-left: 100px; height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
+  </div>
+  <script>
+    let container = d3.select("text#yaxis");
+    let bd = d3.select("body");
+
+    container.attr("class", "y label")
+      .attr("x", 0)
+      .attr("y", 250)
+      .style("text-anchor", "middle")
+      .style('font-family', 'Gill Sans Extrabold,sans-serif')
+      .style('height', 'fit-content')
+      .style("transform", "rotate(270deg)")
+      .style("margin-top", 220)
+      .style("margin-right", 2)
+      .style('font-size', '13px')
+      .text("Salary");
+
+    const svg = d3.select("svg#p1");
+    const width = svg.attr('width');
+    const height = svg.attr('height');
+    const margins = { bottom: 10, left: 15, top: 40, right: 0 };
+    const chartWidth = width - margins.left;
+    const chartHeight = height - margins.top;
+    const chartArea = svg.append('g')
+      .attr('transform', `translate(${margins.left}, ${-margins.bottom})`);
+
+
+    d3.csv('./visOne.csv', d3.autoType).then((data) => {
+      console.log(data);
+      console.log(new Set(data.map(d => d["Position"])))
+
+      data = data.filter((d) => {
+        return (typeof (d['Years of experience']) == "number" && typeof (d['Current Salary']) == "number")
+      })
+      console.log(data);
+
+      const YoEExtent = d3.extent(data, d => d["Years of experience"]);
+      console.log(YoEExtent);
+      const YoEScale = d3.scaleLinear().domain([0, YoEExtent[1]]).range([margins.left, chartWidth]);
+
+      const salaryExtent = d3.extent(data, d => d['Current Salary']);
+      console.log(salaryExtent);
+      const salaryScale = d3.scaleLinear().domain(salaryExtent).range([margins.bottom, chartHeight]);
+
+      let industries = new Set(data.map(d => d["Position"]));
+      industries.delete('Data Scientist');
+      industries.delete('UX_Designer');
+      industries.add('Data Scientist');
+      industries.add('UX_Designer');
+
+      let dataByIndustry = {};
+
+      industries.forEach((ind) => {
+        let tmp = data.filter((d) => {
+          return d['Position'] == ind;
+        });
+        dataByIndustry[ind] = tmp;
+      });
+      console.log(dataByIndustry);
+
+      let years = [0];
+      i = 5;
+      while (i < YoEExtent[1]) {
+        years.push(i);
+        i += 5;
+      }
+
+      console.log("years:", years);
+
+      function median(lst) {
+        if (lst.length == 0) {
+          return 0;
+        }
+
+        lst = lst.map(l => l["Current Salary"]);
+        lst = lst.sort();
+        let mid = Math.floor(lst.length / 2);
+
+        if (lst.length % 2) {
+          return lst[mid];
+        }
+        return (lst[mid - 1] + lst[mid]) / 2;
+      }
+
+      let YoEMediansByIndustry = {};
+
+      let allMedians = [];
+
+      industries.forEach((ind) => {
+        let indData = dataByIndustry[ind];
+        let medians = [];
+        years.forEach((y) => {
+          let tmp = indData.filter((indD) => {
+            if (y == years[years.length - 1]) {
+              return indD["Years of experience"] > y;
+            } else {
+              return indD["Years of experience"] > y && indD["Years of experience"] <= y + 5;
+            };
+          });
+          let med = median(tmp);
+          medians.push(med);
+          allMedians.push(med);
+        });
+        YoEMediansByIndustry[ind] = medians;
+      });
+
+      console.log(YoEMediansByIndustry);
+
+      const industryScale = d3.scaleOrdinal([`#46874f`, `#DB675B`, `#665adb`, `#b375bf`, `#946943`, `#b63e36`, `#b74a70`]);
+      // const industryScale = d3.scaleOrdinal(d3.schemeTableau10.splice(0, 3).concat(d3.schemeTableau10.splice(1, 1).concat(["purple"])));
+
+      const salaryMedianExtent = d3.extent(allMedians);
+      console.log('median extent', salaryMedianExtent);
+      const salaryMedianScale = d3.scaleLinear().domain(salaryMedianExtent).range([chartHeight, margins.bottom * 2]);
+
+      const industriesArray = Array.from(industries);
+      const barwidth = 12;
+      const secwidth = barwidth * industriesArray.length;
+      const secmargin = (chartWidth - (secwidth * years.length)) / (years.length + 1);
+      console.log(secmargin);
+
+      // plot bar graph
+      industriesArray.forEach((ind) => {
+        YoEMediansByIndustry[ind].forEach((indmedian, i) => {
+
+          let x = industriesArray.indexOf(ind);
+          let posX = (i * (secwidth + secmargin) + secmargin) + (barwidth * x + (barwidth / 2));
+          let height = (indmedian === 0) ? chartHeight - 2 : salaryMedianScale(indmedian);
+
+          chartArea.append('line')
+            .attr("x1", posX)
+            .attr("x2", posX)
+            .attr("y1", height)
+            .attr("y2", chartHeight)
+            .attr("median", indmedian)
+            .attr("industry", ind)
+            .attr("stroke", industryScale(ind))
+            .style("stroke-width", barwidth);
+        })
+      })
+
+
+      let legend = d3.selectAll("div.legend");
+      let s = legend.append("p")
+        .style('font-family', 'Gill Sans Extrabold, sans-serif')
+        .style('font-style', 'oblique')
+        .style('font-size', '15pt')
+        .style('margin-top', 0)
+        .style('margin-right', 20)
+        .style('vertical-align', 'bottom')
+        .attr('class', 'industry')
+        .text('Industries: ')
+        .style('margin-bottom', 5);
+
+      industryScale.domain().forEach((ind, i) => {
+        let s = legend.append("p")
+          .style('vertical-align', 'bottom')
+          .attr('class', 'industry')
+          .style('margin-bottom', 5);
+
+        s.text(ind.replace(/_/g, " "))
+          .style('vertical-align', 'bottom')
+          .style('color', industryScale(ind))
+          .style('width', 'fit-content')
+          .style('font-size', "10pt")
+          .style('margin-bottom', 2)
+          .style('margin-top', 4)
+          .style('margin-right', 20)
+          .style('position', 'relative')
+          .style('display', 'flex')
+          .style('flex-direction', 'row')
+          .style('font-family', 'Gill Sans Extrabold, sans-serif');
+
+        s.append('span')
+          .style('display', 'inline-block')
+          .style('width', 10)
+          .style('height', 10)
+          .style('margin-left', 5)
+          .style('border', '1px solid')
+          .style('border-radius', '10px')
+          .style('border-color', industryScale(ind))
+          .style('background', industryScale(ind));
+
+      });
+
+      let viz2Legend = d3.select("div#viz2.legend")
+        .style('margin-left', 350)
+        .style('transform', `translate(${0}, ${- 35}px)`);
+
+
+      let leftAxis = d3.axisLeft(salaryMedianScale).tickFormat(d3.format("$~s"));
+
+      let leftGridlines = d3.axisLeft(salaryMedianScale)
+        .tickSize(-width)
+        .tickFormat('');
+
+      svg.append('g').attr('class', 'x gridlines')
+        .attr('transform', `translate(${margins.left * 2}, ${- margins.bottom})`)
+        .call(leftGridlines);
+
+
+      svg.append('g')
+        .attr('class', 'x axis')
+        .attr('transform', `translate(${margins.left * 2}, ${- margins.bottom})`)
+        .call(leftAxis);
+
+      chartArea.raise();
+
+      // create bottom axis scale
+      var bottomScale = d3.scaleBand()
+        .domain(["0-5 years", "5-10 years", "10-15 years", "15-20 years", "20-25 years", "25-30 years", "30-35 years", "35-40 years"])       // This is what is written on the Axis: from 0 to 100
+        .range([30, 790])
+        .padding([0]);
+
+      let xAxisGenerator = d3.axisBottom(bottomScale)
+        .tickSize(0);
+
+      let xAxis = svg.append("g")
+        .call(xAxisGenerator);
+
+      xAxis.attr("transform", `translate(${0}, ${chartHeight - 6})`);
+
+      svg.append("text")
+        .attr("class", "x label")
+        .attr("x", width / 2)
+        .attr("y", height - 8)
+        .style("text-anchor", "middle")
+        .style("margin-top", 20)
+        .style('font-family', 'Gill Sans Extrabold,sans-serif')
+        .style('font-size', '13px')
+        .text("Years of Experience");
+
+
+
+
+    },
+      (error) => { console.log('error', error); })
+
+  </script>
+
+  <script>
+    maleaverage = [{ "Position": 'FullStack_Developer', "year": 2020, "salary": 70143 },
+    { "Position": 'FullStack_Developer', "year": 2019, "salary": 61857 },
+    { "Position": 'FullStack_Developer', "year": 2018, "salary": 54357 },
+    { "Position": 'FrontEnd_Developer', "year": 2020, "salary": 65933 },
+    { "Position": 'FrontEnd_Developer', "year": 2019, "salary": 56438 },
+    { "Position": 'FrontEnd_Developer', "year": 2018, "salary": 50792 },
+    { "Position": 'Data Scientist', "year": 2020, "salary": 84310 },
+    { "Position": 'Data Scientist', "year": 2019, "salary": 74600 },
+    { "Position": 'Data Scientist', "year": 2018, "salary": 67290 },
+    { "Position": 'BackEnd_Developer', "year": 2020, "salary": 70319 },
+    { "Position": 'BackEnd_Developer', "year": 2019, "salary": 61526 },
+    { "Position": 'BackEnd_Developer', "year": 2018, "salary": 55971 }];
+
+
+
+    d3.csv('./visTwo.csv', d3.autoType)
+      .then((data) => {
+
+
+        console.log(data)
+
+
+        const svg = d3.select('svg#male');
+        const width = svg.attr('width');
+        const height = svg.attr('height');
+        let margins = { top: 80, right: 80, bottom: 80, left: 80 };
+        const chartWidth = width - margins.left - margins.right;
+        const chartHeight = height - margins.top - margins.bottom;
+
+        let annotations = svg.append("g").attr("id", "annotations");
+
+        let chartArea = svg.append('g')
+          .attr('transform', `translate(${margins.left}, ${margins.top})`);
+
+
+
+        // color = d3.scale.ordinal()
+        // .range(["#308fef", "#5fa9f3", "#1176db"]);
+
+
+
+        //  build some scales
+
+        const xScale = d3.scaleLinear()
+          .domain([0, 4])
+          .range([0, chartWidth]);
+
+
+        const yExtent = d3.max(data, d => d['Current Salary']);
+        const yScale = d3.scaleLinear()
+          .domain([0, yExtent])
+          .range([chartHeight, 0]);
+
+
+
+
+        //y axis & lable
+        let leftAxis = d3.axisLeft(yScale)
+          .tickFormat(d3.format("$~s"));
+        //.tickFormat(d3.format("$.0f"));
+        //"$.0s"
+
+        annotations.append("g")
+          .attr("class", "y axis")
+          .attr("transform", `translate(${margins.left - 10}, ${margins.top})`)
+          .call(leftAxis)
+
+        var axisLabelX = -60;
+        var axisLabelY = chartHeight / 2;
+        chartArea.append('g')
+          .attr('transform', 'translate(' + axisLabelX + ', ' + axisLabelY + ')')
+          .append('text')
+          .attr('text-anchor', 'middle')
+          .attr('transform', 'rotate(-90)')
+          .text('Male EU IT Worker Annual Salary');
+
+        //x axis and label
+        let x_axis = d3.axisBottom().scale(xScale)
+          .tickValues([0, 1, 2, 3, 0])
+          .tickFormat((d, i) => ['0', '2018', '2019', '2020', '0'][i]);
+
+
+        annotations.append("g")
+          .attr("class", "x axis")
+          .attr("transform", `translate(${margins.left}, ${chartHeight + margins.top + 10})`)
+          .call(x_axis);
+
+        // const industryScale = d3.scaleOrdinal(d3.schemeTableau10.splice(0, 3).concat(d3.schemeTableau10.splice(1, 1).concat(["purple"])));
+        // const industryScale = d3.scaleOrdinal([`#1F1F4A`, `#5B3159`, `#A24857`, `#DB675B`, `#F6A064`, `#b63e36`, `#b74a70`, `#946943`]);
+        const industryScale = d3.scaleOrdinal([`#46874f`, `#DB675B`, `#665adb`, `#b375bf`, `#b63e36`, `#b74a70`, `#946943`]);
+
+        //x and y gridlines
+        for (let j = 0; j <= 4; j = j + 1) {
+          chartArea.append("line")
+            .attr("x1", xScale(j))
+            .attr("y1", 0)
+            .attr("x2", xScale(j))
+            .attr("y2", chartHeight)
+
+            .style("stroke", "lightgrey")
+            .style("stroke-width", 1);
+
+        };
+
+        for (let j = yExtent; j >= 0; j = j - 10000) {
+          chartArea.append("line")
+            .attr("x1", 0)
+            .attr("y1", chartHeight - yScale(j))
+            .attr("x2", chartWidth)
+            .attr("y2", chartHeight - yScale(j))
+
+            .style("stroke", "lightgrey")
+            .style("stroke-width", 1);
+        };
+
+
+
+        //subset the date and draw circles for male BackEnd_Developer
+        data1 = data.filter((d) => { return d['Position'] == 'BackEnd_Developer' && d['Gender'] == 'M'; });
+        console.log(data1)
+        data1.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(3) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Current Salary'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.2)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]))
+            ;
+
+        });
+
+
+        data1.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(2) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary one year ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data1.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(1) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary two years ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+
+        //subset the date and draw circles for male FrontEnd_Developer
+
+        data2 = data.filter((d) => { return d['Position'] == 'FrontEnd_Developer' && d['Gender'] == 'M'; });
+        console.log(data2)
+        data2.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(3) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Current Salary'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]))
+            ;
+
+        });
+
+
+        data2.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(2) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary one year ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data2.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(1) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary two years ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+        //subset the date and draw circles for male FullStack_Developer
+        data3 = data.filter((d) => { return d['Position'] == 'FullStack_Developer' && d['Gender'] == 'M'; });
+        console.log(data3)
+        data3.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(3) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Current Salary'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]))
+            ;
+
+        });
+
+
+        data3.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(2) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary one year ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data3.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(1) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary two years ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+        //subset the date and draw circles for male data scientist
+        data4 = data.filter((d) => { return d['Position'] == 'Data Scientist' && d['Gender'] == 'M'; });
+        console.log(data4)
+        data4.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(3) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Current Salary'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]))
+            ;
+
+        });
+
+
+        data3.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(2) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary one year ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+        data3.forEach((d, i) => {
+
+          chartArea.append('circle')
+            .attr('cx', Math.floor(xScale(1) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary two years ago'] + Math.random() * 15 - 5)))
+            .attr('cy', yScale(d['Salary two years ago']))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+
+
+
+
+
+        maleaverage1 = maleaverage.filter((d) => { return d['Position'] == 'BackEnd_Developer'; });
+        console.log(maleaverage1)
+        const salaryExtent = d3.extent(maleaverage1, d => d['salary']);
+        const salaryScale = d3.scaleLinear().domain(salaryExtent).range([yScale(55971), yScale(70319)]);
+
+
+        const yearExtent = d3.extent(maleaverage1, d => d['year']);
+        const yearScale = d3.scaleTime().domain(yearExtent).range([135, 405]);
+
+
+        var lineGen = d3.line()
+          .x(d => yearScale(d['year']))
+          .y(d => salaryScale(d['salary']))
+          .curve(d3.curveMonotoneX);
+
+
+        chartArea.append("path")
+          .datum(maleaverage1)
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr('opacity', 0.9)
+          .attr("stroke", industryScale('BackEnd_Developer'))
+          .attr("stroke-width", 2)
+          .attr("d", lineGen);
+
+
+
+        maleaverage2 = maleaverage.filter((d) => { return d['Position'] == 'FrontEnd_Developer'; });
+        console.log(maleaverage2)
+        const salaryExtent2 = d3.extent(maleaverage2, d => d['salary']);
+        const salaryScale2 = d3.scaleLinear().domain(salaryExtent2).range([yScale(50792), yScale(65933)]);
+
+
+        const yearExtent2 = d3.extent(maleaverage1, d => d['year']);
+        const yearScale2 = d3.scaleTime().domain(yearExtent2).range([135, 405]);
+
+
+        var lineGen = d3.line()
+          .x(d => yearScale2(d['year']))
+          .y(d => salaryScale2(d['salary']))
+          .curve(d3.curveMonotoneX);
+
+
+        chartArea.append("path")
+          .datum(maleaverage2)
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr('opacity', 0.9)
+          .attr("stroke", industryScale('FrontEnd_Developer'))
+          .attr("stroke-width", 2)
+          .attr("d", lineGen);
+
+
+
+        maleaverage3 = maleaverage.filter((d) => { return d['Position'] == 'FullStack_Developer'; });
+        console.log(maleaverage3)
+        const salaryExtent3 = d3.extent(maleaverage3, d => d['salary']);
+        const salaryScale3 = d3.scaleLinear().domain(salaryExtent3).range([yScale(54357), yScale(70143)]);
+
+
+        const yearExtent3 = d3.extent(maleaverage3, d => d['year']);
+        const yearScale3 = d3.scaleTime().domain(yearExtent3).range([135, 405]);
+
+
+        var lineGen = d3.line()
+          .x(d => yearScale3(d['year']))
+          .y(d => salaryScale3(d['salary']))
+          .curve(d3.curveMonotoneX);
+
+
+        chartArea.append("path")
+          .datum(maleaverage3)
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr('opacity', 0.9)
+          .attr("stroke", industryScale("FullStack_Developer"))
+          .attr("stroke-width", 2)
+          .attr("d", lineGen);
+
+
+        maleaverage4 = maleaverage.filter((d) => { return d['Position'] == 'Data Scientist'; });
+        console.log(maleaverage4)
+        const salaryExtent4 = d3.extent(maleaverage4, d => d['salary']);
+        const salaryScale4 = d3.scaleLinear().domain(salaryExtent4).range([yScale(67290), yScale(84310)]);
+
+
+        const yearExtent4 = d3.extent(maleaverage4, d => d['year']);
+        const yearScale4 = d3.scaleTime().domain(yearExtent4).range([135, 405]);
+
+
+        var lineGen = d3.line()
+          .x(d => yearScale4(d['year']))
+          .y(d => salaryScale4(d['salary']))
+          .curve(d3.curveMonotoneX);
+
+
+        chartArea.append("path")
+          .datum(maleaverage4)
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr('opacity', 0.9)
+          .attr("stroke", industryScale("Data Scientist"))
+          .attr("stroke-width", 2)
+          .attr("d", lineGen);
+
+
+
+        //});
+
+
+
+
+
+        femaleaverage = [{ "Position": 'FullStack_Developer', "year": 2020, "salary": 51000 },
+        { "Position": 'FullStack_Developer', "year": 2019, "salary": 43500 },
+        { "Position": 'FullStack_Developer', "year": 2018, "salary": 40000 },
+        { "Position": 'FrontEnd_Developer', "year": 2020, "salary": 56000 },
+        { "Position": 'FrontEnd_Developer', "year": 2019, "salary": 51000 },
+        { "Position": 'FrontEnd_Developer', "year": 2018, "salary": 45000 },
+        { "Position": 'Data Scientist', "year": 2020, "salary": 109000 },
+        { "Position": 'Data Scientist', "year": 2019, "salary": 105000 },
+        { "Position": 'Data Scientist', "year": 2018, "salary": 97000 },
+        { "Position": 'BackEnd_Developer', "year": 2020, "salary": 58227 },
+        { "Position": 'BackEnd_Developer', "year": 2019, "salary": 53493 },
+        { "Position": 'BackEnd_Developer', "year": 2018, "salary": 49250 }];
+
+
+
+
+        const svg2 = d3.select('svg#female');
+        const width2 = svg2.attr('width');
+        const height2 = svg2.attr('height');
+        margins = { top: 80, right: 80, bottom: 80, left: 80 };
+        const chartWidth2 = width2 - margins.left - margins.right;
+        const chartHeight2 = height2 - margins.top - margins.bottom;
+
+        let annotations2 = svg2.append("g").attr("id", "annotations2");
+
+
+        let chartArea2 = svg2.append('g')
+          .attr('transform', `translate(${margins.left}, ${margins.top})`);
+
+
+
+        const xScale2 = d3.scaleLinear()
+          .domain([0, 4])
+          .range([0, chartWidth2]);
+
+
+        const yExtent2 = d3.max(data, d => d['Current Salary']);
+        const yScale2 = d3.scaleLinear()
+          .domain([0, yExtent2])
+          .range([chartHeight2, 0]);
+
+
+
+
+        let leftAxis2 = d3.axisLeft(yScale2)
+          .tickFormat(d3.format("$~s"));
+        //.tickFormat(d3.format("$.0f"));
+        //"$.0s"
+
+        annotations2.append("g")
+          .attr("class", "y axis")
+          .attr("transform", `translate(${margins.left - 10}, ${margins.top})`)
+          .call(leftAxis2)
+
+        let x_axis2 = d3.axisBottom().scale(xScale2)
+          .tickValues([0, 1, 2, 3, 0])
+          .tickFormat((d, i) => ['', '2018', '2019', '2020', '0'][i]);
+
+
+        annotations2.append("g")
+          .attr("class", "x axis")
+          .attr("transform", `translate(${margins.left}, ${chartHeight2 + margins.top + 10})`)
+          .call(x_axis2);
+
+
+        var axisLabelX2 = -60;
+        var axisLabelY2 = chartHeight2 / 2;
+        chartArea2.append('g')
+          .attr('transform', 'translate(' + axisLabelX2 + ', ' + axisLabelY2 + ')')
+          .append('text')
+          .attr('text-anchor', 'middle')
+          .attr('transform', 'rotate(-90)')
+          .text('Female EU IT Worker Annual Salary');
+
+
+        //const industryScale2 = d3.scaleOrdinal(d3.schemeTableau10.splice(0, 3).concat(d3.schemeTableau10.splice(1, 1).concat(["purple"])));
+
+
+        for (let j = 0; j <= 4; j = j + 1) {
+          chartArea2.append("line")
+            .attr("x1", xScale2(j))
+            .attr("y1", 0)
+            .attr("x2", xScale2(j))
+            .attr("y2", chartHeight2)
+
+            .style("stroke", "lightgrey")
+            .style("stroke-width", 1);
+
+        };
+
+        for (let j = yExtent2; j >= 0; j = j - 10000) {
+          chartArea2.append("line")
+            .attr("x1", 0)
+            .attr("y1", chartHeight2 - yScale2(j))
+            .attr("x2", chartWidth2)
+            .attr("y2", chartHeight2 - yScale2(j))
+
+            .style("stroke", "lightgrey")
+            .style("stroke-width", 1);
+        };
+
+
+
+        data5 = data.filter((d) => { return d['Position'] == 'BackEnd_Developer' && d['Gender'] == 'F'; });
+        console.log(data5)
+        data5.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(3) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Current Salary'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.2)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]))
+            ;
+
+        });
+
+
+        data5.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(2) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Salary one year ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data5.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale(1) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale(d['Salary two years ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+
+
+
+        data6 = data.filter((d) => { return d['Position'] == 'FrontEnd_Developer' && d['Gender'] == 'F'; });
+        console.log(data6)
+        data6.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(3) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Current Salary'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+          ;
+
+        });
+
+
+        data6.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(2) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Salary one year ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data6.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(1) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Salary two years ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data7 = data.filter((d) => { return d['Position'] == 'FullStack_Developer' && d['Gender'] == 'F'; });
+        console.log(data7)
+        data7.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(3) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Current Salary'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+          ;
+
+        });
+
+
+        data7.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(2) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Salary one year ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data7.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(1) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Salary two years ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data8 = data.filter((d) => { return d['Position'] == 'Data Scientist' && d['Gender'] == 'F'; });
+        console.log(data8)
+        data8.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(3) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Current Salary'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+          ;
+
+        });
+
+
+        data8.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(2) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Salary one year ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+        data8.forEach((d, i) => {
+
+          chartArea2.append('circle')
+            .attr('cx', Math.floor(xScale2(1) + Math.random() * 15 - 5))
+            .attr('cy', Math.floor(yScale2(d['Salary two years ago'] + Math.random() * 15 - 5)))
+            .attr('r', 3)
+            .attr('opacity', 0.4)
+            .attr('index', i)
+            .style('fill', industryScale(d["Position"]));
+
+        });
+
+
+
+        femaleaverage1 = femaleaverage.filter((d) => { return d['Position'] == 'BackEnd_Developer'; });
+        console.log(femaleaverage1)
+        const salaryExtent5 = d3.extent(femaleaverage1, d => d['salary']);
+        const salaryScale5 = d3.scaleLinear().domain(salaryExtent5).range([yScale2(49250), yScale2(58227)]);
+
+
+        const yearExtent5 = d3.extent(femaleaverage1, d => d['year']);
+        const yearScale5 = d3.scaleTime().domain(yearExtent5).range([135, 405]);
+
+
+
+        var lineGen2 = d3.line()
+          .x(d => yearScale2(d['year']))
+          .y(d => salaryScale2(d['salary']))
+          .curve(d3.curveMonotoneX);
+
+
+        chartArea2.append("path")
+          .datum(femaleaverage1)
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr("stroke", industryScale('BackEnd_Developer'))
+          .attr("stroke-width", 2)
+          .attr("d", lineGen2);
+
+
+
+        femaleaverage2 = femaleaverage.filter((d) => { return d['Position'] == 'FrontEnd_Developer'; });
+        console.log(femaleaverage2)
+        const salaryExtent6 = d3.extent(femaleaverage2, d => d['salary']);
+        const salaryScale6 = d3.scaleLinear().domain(salaryExtent6).range([yScale2(45000), yScale2(56000)]);
+
+
+        const yearExtent6 = d3.extent(femaleaverage1, d => d['year']);
+        const yearScale6 = d3.scaleTime().domain(yearExtent6).range([135, 405]);
+
+
+        var lineGen2 = d3.line()
+          .x(d => yearScale6(d['year']))
+          .y(d => salaryScale6(d['salary']))
+          .curve(d3.curveMonotoneX);
+
+
+        chartArea2.append("path")
+          .datum(femaleaverage2)
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr("stroke", industryScale('FrontEnd_Developer'))
+          .attr("stroke-width", 2)
+          .attr("d", lineGen2);
+
+
+
+        femaleaverage3 = femaleaverage.filter((d) => { return d['Position'] == 'FullStack_Developer'; });
+        console.log(femaleaverage3)
+        const salaryExtent7 = d3.extent(femaleaverage3, d => d['salary']);
+        const salaryScale7 = d3.scaleLinear().domain(salaryExtent7).range([yScale2(40000), yScale2(51000)]);
+
+
+        const yearExtent7 = d3.extent(femaleaverage3, d => d['year']);
+        const yearScale7 = d3.scaleTime().domain(yearExtent7).range([135, 405]);
+
+
+
+        var lineGen2 = d3.line()
+          .x(d => yearScale7(d['year']))
+          .y(d => salaryScale7(d['salary']))
+          .curve(d3.curveMonotoneX);
+
+
+        chartArea2.append("path")
+          .datum(femaleaverage3)
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr("stroke", industryScale('FullStack_Developer'))
+          .attr("stroke-width", 2)
+          .attr("d", lineGen2);
+
+
+        femaleaverage4 = femaleaverage.filter((d) => { return d['Position'] == 'Data Scientist'; });
+        console.log(femaleaverage4)
+        const salaryExtent8 = d3.extent(femaleaverage4, d => d['salary']);
+        const salaryScale8 = d3.scaleLinear().domain(salaryExtent8).range([yScale2(97000), yScale2(109000)]);
+
+
+        const yearExtent8 = d3.extent(femaleaverage4, d => d['year']);
+        const yearScale8 = d3.scaleTime().domain(yearExtent8).range([135, 405]);
+
+
+        var lineGen2 = d3.line()
+          .x(d => yearScale8(d['year']))
+          .y(d => salaryScale8(d['salary']))
+          .curve(d3.curveMonotoneX);
+
+
+        chartArea2.append("path")
+          .datum(femaleaverage4)
+          .attr("class", "line")
+          .attr("fill", "none")
+          .attr("stroke", industryScale('Data Scientist'))
+          .attr("stroke-width", 2)
+          .attr("d", lineGen2);
+
+      });
+
+  </script>
+
+
+</body>
+
+</html>

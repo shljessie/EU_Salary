@@ -53,15 +53,20 @@
   <h4 style="font-weight:300; margin-top:100px;  margin-left:20px;">
     Visualization 2</h4>
 
-  <h3 style="font-size: 18pt; font-weight: 600;  margin-left: 28%; margin-bottom: 0;">
+  <h3 style="font-size: 18pt; font-weight: 600; text-align: center; margin-bottom: 0;">
     Change in Average Salary from 2016-2018 based on IT Industries</h3>
+  
+  <div style="text-align: center; display:flex; flex-direction:column;align-items:center;">
+    <div style="display:flex; flex-direction:row;">
+      <svg id="male" height="700" width="700"></svg>
+      <svg id="female" height="700" width="700"></svg>
+    </div>
+    <p id="viz2-l" style="margin-top: 30px;  ">*** The lines show an average change in salary over the years 2016 to 2018 by each industry ***</p>
 
-  <svg id="male" height="700" width="700"></svg>
-  <svg id="female" height="700" width="700"></svg>
-  <p id="viz2-l" style="margin-top: 30px; margin-left: 20px; ">*** The lines show an average change in salary over the years 2016 to 2018 by each industry ***</p>
+    <div class="legend" id="viz2"
+      style="height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
+    </div>
 
-  <div class="legend" id="viz2"
-    style="margin-left: 100px; height: 30px; margin-top: 10px; width: fit-content; padding: 15 15 13 15; border: solid 1px black; height:fit-content; display: flex; flex-direction: row; background-color: #F0F0F0; ">
   </div>
   <script>
     let container = d3.select("text#yaxis");
@@ -248,11 +253,11 @@
       });
 
       let viz2Legend = d3.select("div#viz2.legend")
-        .style('margin-left', '28.5%')
+        .style(' text-align', 'center')
         .style('transform', `translate(${0}, ${- 35}px)`);
 
       let viz2comment = d3.select("p#viz2-l")
-        .style('margin-left', 450)
+        .style(' text-align', 'center')
         .style('transform', `translate(${0}, ${- 35}px)`);
 
       let viz2LegendUX = d3.select("div#viz2.legend p#UX_Designer").style('display', 'none');
